@@ -106,10 +106,13 @@ pub fn run() -> Result<u32, &'static str> {
         let address = account.address_as_hex();
         if regex.is_match(&address) {
             finding_address = false;
+            eprint!("{}\r", account.address_as_hex());
+            println!();
             println!("found matching address!");
+            println!();
             println!("{:x}", account);
         } else {
-            println!("trying...");
+            eprint!("{}\r", account.address_as_hex());
         }
     }
 
