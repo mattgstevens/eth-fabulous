@@ -1,5 +1,6 @@
 use rand::prelude::*;
 use rand::rngs::OsRng;
+use regex::Regex;
 use secp256k1::{PublicKey, Secp256k1, SecretKey};
 use sha3::{Digest, Keccak256};
 use std::fmt;
@@ -35,15 +36,15 @@ impl Account {
         Account::new(&pk_src)
     }
 
-    pub fn hex_print_priv_key(&self) -> String {
+    pub fn priv_key_as_hex(&self) -> String {
         byte_array_to_hex_prefixed(&self.priv_key)
     }
 
-    pub fn hex_print_pub_key(&self) -> String {
+    pub fn pub_key_as_hex(&self) -> String {
         byte_array_to_hex_prefixed(&self.pub_key)
     }
 
-    pub fn hex_print_address(&self) -> String {
+    pub fn address_as_hex(&self) -> String {
         byte_array_to_hex_prefixed(&self.address)
     }
 }
@@ -63,9 +64,9 @@ impl fmt::LowerHex for Account {
         write!(
             f,
             "priv_key: {}\n pub_key: {}\n address: {}\n",
-            byte_array_to_hex_prefixed(&self.priv_key),
-            byte_array_to_hex_prefixed(&self.pub_key),
-            byte_array_to_hex_prefixed(&self.address)
+            &self.priv_key_as_hex(),
+            &self.pub_key_as_hex(),
+            &self.address_as_hex(),
         )
     }
 }
@@ -97,6 +98,21 @@ fn byte_array_to_hex_prefixed(u8_vector: &Vec<u8>) -> String {
 }
 
 pub fn run() -> Result<u32, &'static str> {
+    let regex = Regex::new("000").unwrap();
+
+    let mut finding_address = true;
+    while finding_address == true {
+        let account = Account::rand_new();
+        let address = account.address_as_hex();
+        if regex.is_match(&address) {
+            finding_address = false;
+            println!("found matching address!");
+            println!("{:x}", account);
+        } else {
+            println!("trying...");
+        }
+    }
+
     Ok(0)
 }
 
@@ -110,5 +126,10 @@ mod tests {
         println!("{}", account);
         println!("{:x}", account);
         println!("{:?}", account);
+    }
+
+    #[test]
+    fn test_run() {
+        run();
     }
 }

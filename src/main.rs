@@ -2,7 +2,7 @@ use clap::{App, Arg, SubCommand};
 
 fn main() {
     let matches = App::new("Eth Fabulous")
-        .version("1.0")
+        .version("0.1.0")
         .author("Cody Lamson <tovarishfin@gmail.com>")
         .about("ethereum vanity address generator")
         .arg(
