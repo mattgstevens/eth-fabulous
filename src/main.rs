@@ -1,48 +1,70 @@
-use secp256k1::{Secp256k1, SecretKey, PublicKey};
-use rand::prelude::*;
-use rand::rngs::OsRng;
-use sha3::{Digest, Keccak256};
-
-//#[derive(Debug)]
-//struct Account {
-    //priv_key: [u8; 32],
-    //pub_key: [u8; 64],
-    //addr: [u8; 20],
-//}
-
-//impl Account {
-    //fn new(priv_key: [u8; 32], pub_key: [u8; 64], addr: [u8; 20]) -> Account {
-        //Account {
-            //priv_key,
-            //pub_key,
-            //addr,
-        //}
-    //}
-//}
-
-fn gen_account() {
-    let mut pk_src: [u8; 32] = [0; 32];
-    OsRng.fill_bytes(&mut pk_src);
-
-    let secp = Secp256k1::new();
-    let priv_key = SecretKey::from_slice(&pk_src).expect("error generating private_key");
-    let pub_key_result = PublicKey::from_secret_key(&secp, &priv_key);
-    let pub_key = &pub_key_result.serialize_uncompressed()[1..];
-
-    let mut hasher = Keccak256::new();
-    hasher.input(pub_key);
-    let address = &hasher.result()[12..];
-
-    println!("private key src: {:?}", pk_src);
-    println!("private key: {:?}", priv_key);
-    println!("public key: {:?}", pub_key);
-    println!("address: {:?}", address);
-
-    //Account::new(pk_src, pub_key, address)
-}
+use clap::{App, Arg, SubCommand};
 
 fn main() {
-    gen_account();
-    //let acct = gen_account();
-    //println!("{:#?}", acct);
+    let matches = App::new("Eth Fabulous")
+        .version("1.0")
+        .author("Cody Lamson <tovarishfin@gmail.com>")
+        .about("ethereum vanity address generator")
+        .arg(
+            Arg::with_name("config")
+                .short("c")
+                .long("config")
+                .value_name("FILE")
+                .help("Sets custom config file")
+                .takes_value(true),
+        )
+        .arg(
+            Arg::with_name("INPUT")
+                .help("Sets the input file to use")
+                .required(true)
+                .index(1),
+        )
+        .arg(
+            Arg::with_name("v")
+                .short("v")
+                .multiple(true)
+                .help("Sets the level of verbosity"),
+        )
+        .subcommand(
+            SubCommand::with_name("test")
+                .about("controls testing features")
+                .version("1.3")
+                .author("Someone E. <someone_else@thing.com>")
+                .arg(
+                    Arg::with_name("debug")
+                        .short("d")
+                        .help("print debug information verbosely"),
+                ),
+        )
+        .get_matches();
+
+    // gets a value for config if supplied by user or default to "default.conf"
+    let config = matches.value_of("config").unwrap_or("default.conf");
+    println!("Value for config: {}", config);
+
+    // because input is required we can simply unwrap here... clap enforces...
+    println!("Using input file: {}", matches.value_of("INPUT").unwrap());
+
+    // Vary the output based on how many times the user used the "verbose" flag
+    // (i.e. 'myprog -v -v -v' or 'myprog -vvv' vs 'myprog -v'
+    match matches.occurrences_of("v") {
+        0 => println!("no verbose info"),
+        1 => println!("some verbose info"),
+        2 => println!("tons of verbose info"),
+        3 | _ => println!("insane amounts of verbose info"),
+    }
+
+    // You can handle information about subcommands by requesting their matches by name
+    if let Some(matches) = matches.subcommand_matches("test") {
+        if matches.is_present("debug") {
+            println!("printing debug info...");
+        } else {
+            println!("printing normally");
+        }
+    }
+
+    // run the app...
+    if let Err(e) = eth_fabulous::run() {
+        eprintln!("Application error: {}", e)
+    }
 }
