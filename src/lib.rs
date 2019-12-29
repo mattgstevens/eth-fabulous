@@ -1,9 +1,11 @@
+use num_cpus;
 use rand::prelude::*;
 use rand::rngs::OsRng;
 use regex::Regex;
 use secp256k1::{PublicKey, Secp256k1, SecretKey};
 use sha3::{Digest, Keccak256};
-use std::fmt;
+use std::sync::{Arc, Mutex};
+use std::{fmt, thread};
 
 pub struct Account {
     priv_key: Vec<u8>,
@@ -97,23 +99,48 @@ fn byte_array_to_hex_prefixed(u8_vector: &Vec<u8>) -> String {
     format!("{}{}", "0x", byte_array_to_hex(u8_vector))
 }
 
-pub fn run() -> Result<u32, &'static str> {
-    let regex = Regex::new("000").unwrap();
-
-    let mut finding_address = true;
-    while finding_address == true {
+pub fn try_generate_wallet(regex: &Regex, trying: Arc<Mutex<bool>>) -> bool {
+    loop {
         let account = Account::rand_new();
         let address = account.address_as_hex();
-        if regex.is_match(&address) {
-            finding_address = false;
+        let mut trying = trying.lock().unwrap();
+        if !*trying {
+            break;
+        } else if regex.is_match(&address) {
             eprint!("{}\r", account.address_as_hex());
             println!();
             println!("found matching address!");
             println!();
             println!("{:x}", account);
+
+            *trying = false;
+
+            break;
         } else {
             eprint!("{}\r", account.address_as_hex());
         }
+    }
+
+    *trying.try_lock().unwrap()
+}
+
+pub fn run() -> Result<u32, &'static str> {
+    let cpus = num_cpus::get();
+    let regex = Arc::new(Regex::new("00000").unwrap());
+    let trying = Arc::new(Mutex::new(true));
+
+    let mut workers = Vec::with_capacity(cpus);
+    for _ in 0..cpus {
+        let regex = Arc::clone(&regex);
+        let trying = Arc::clone(&trying);
+        let worker = thread::spawn(move || {
+            try_generate_wallet(&regex, trying);
+        });
+        workers.push(worker);
+    }
+
+    for worker in workers {
+        worker.join().unwrap();
     }
 
     Ok(0)
@@ -133,6 +160,6 @@ mod tests {
 
     #[test]
     fn test_run() {
-        run();
+        run().unwrap();
     }
 }
