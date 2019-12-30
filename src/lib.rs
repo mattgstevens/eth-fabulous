@@ -4,6 +4,7 @@ use colored::*;
 use regex::Regex;
 use std::sync::{Arc, Mutex};
 use std::thread;
+use std::time::Instant;
 
 pub fn try_generate_wallet(
     regex: &Regex,
@@ -35,6 +36,7 @@ pub fn try_generate_wallet(
 }
 
 pub fn run(search: &str, cpus: usize, verbosity: u64) -> Result<Account, String> {
+    let now = Instant::now();
     let regex = Arc::new(Regex::new(search).unwrap());
     let trying = Arc::new(Mutex::new(true));
     let account = Arc::new(Mutex::new(None));
@@ -68,7 +70,14 @@ pub fn run(search: &str, cpus: usize, verbosity: u64) -> Result<Account, String>
     let account = account.lock().unwrap().take().unwrap();
 
     if verbosity >= 1 {
-        println!("\n\n{}", "found account matching search!".magenta());
+        println!(
+            "\n\n{}",
+            format!(
+                "found matching account in {} seconds.",
+                now.elapsed().as_secs()
+            )
+            .magenta()
+        );
         println!(
             "{}{}",
             "private key: ".yellow(),
