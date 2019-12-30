@@ -1,4 +1,12 @@
 use clap::{App, Arg};
+use regex::Regex;
+
+fn validate_hexadecimal(arg: String) -> Result<(), String> {
+    let rgx = Regex::new("[0-9a-fA-F]+").unwrap();
+    assert!(rgx.is_match(&arg));
+
+    Ok(())
+}
 
 fn main() {
     let matches = App::new("Eth Fabulous")
@@ -6,19 +14,19 @@ fn main() {
         .author("Cody Lamson <tovarishfin@gmail.com>")
         .about("ethereum vanity address generator")
         .arg(
-            Arg::with_name("regex")
-                .short("r")
-                .long("regex")
-                .help("regex to search for when trying addresses")
+            Arg::with_name("search")
+                .short("s")
+                .long("search")
+                .help("value to search for when trying addresses")
                 .takes_value(true)
-                .required(true),
+                .required(true)
+                .validator(validate_hexadecimal),
         )
         .get_matches();
 
-    let regex = matches.value_of("regex").unwrap();
+    let search = matches.value_of("search").unwrap();
 
-    // run the app...
-    if let Err(e) = eth_fabulous::run(regex) {
+    if let Err(e) = eth_fabulous::run(search) {
         eprintln!("Application error: {}", e)
     }
 }
