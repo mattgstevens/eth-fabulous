@@ -1,4 +1,4 @@
-use num_cpus;
+use colored::*;
 use rand::prelude::*;
 use rand::rngs::OsRng;
 use regex::Regex;
@@ -55,7 +55,7 @@ impl fmt::Display for Account {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
-            "priv_key: {:?}\n pub_key: {:?}\n address: {:?}\n",
+            "private key: {:?}\n public key: {:?}\n address: {:?}\n",
             self.priv_key, self.pub_key, self.address
         )
     }
@@ -65,7 +65,7 @@ impl fmt::LowerHex for Account {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
-            "priv_key: {}\n pub_key: {}\n address: {}\n",
+            "private key: {}\n public key: {}\n address: {}\n",
             &self.priv_key_as_hex(),
             &self.pub_key_as_hex(),
             &self.address_as_hex(),
@@ -77,7 +77,7 @@ impl fmt::Debug for Account {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
-            "priv_key: {} len: {}\n pub_key: {} len: {}\n address: {} len: {}\n",
+            "private key: {} len: {}\n public key: {} len: {}\n address: {} len: {}\n",
             byte_array_to_hex_prefixed(&self.priv_key),
             &self.priv_key.len(),
             byte_array_to_hex_prefixed(&self.pub_key),
@@ -108,9 +108,7 @@ pub fn try_generate_wallet(regex: &Regex, trying: Arc<Mutex<bool>>) -> bool {
             break;
         } else if regex.is_match(&address) {
             eprint!("{}\r", account.address_as_hex());
-            println!();
-            println!("found matching address!");
-            println!();
+            println!("\n{}\n", "found matching address!".magenta());
             println!("{:x}", account);
 
             *trying = false;
@@ -124,8 +122,7 @@ pub fn try_generate_wallet(regex: &Regex, trying: Arc<Mutex<bool>>) -> bool {
     *trying.lock().unwrap()
 }
 
-pub fn run(search: &str) -> Result<u32, &'static str> {
-    let cpus = num_cpus::get();
+pub fn run(search: &str, cpus: usize) -> Result<u8, String> {
     let regex = Arc::new(Regex::new(search).unwrap());
     let trying = Arc::new(Mutex::new(true));
 
@@ -160,6 +157,6 @@ mod tests {
 
     #[test]
     fn test_run() {
-        run("000").unwrap();
+        run("000", 1).unwrap();
     }
 }
