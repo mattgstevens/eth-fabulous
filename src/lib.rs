@@ -17,14 +17,14 @@ pub fn try_generate_wallet(
             let account = Account::rand_new();
             let address = account.address_as_hex();
 
+            if verbosity >= 2 {
+                eprint!("{}\r", account.address_as_hex());
+            }
+
             if regex.is_match(&address) {
                 result = Some(account);
                 *trying = false;
                 break;
-            }
-
-            if verbosity >= 2 {
-                eprint!("{}\r", account.address_as_hex());
             }
         } else {
             break;

@@ -3,7 +3,7 @@ use num_cpus;
 use regex::Regex;
 
 fn validate_hexadecimal(arg: String) -> Result<(), String> {
-    let rgx = Regex::new("[0-9a-fA-F]+").unwrap();
+    let rgx = Regex::new("^[0-9a-fA-F]+$").unwrap();
 
     if rgx.is_match(&arg) {
         Ok(())
