@@ -57,15 +57,22 @@ fn main() {
                 .required(false)
                 .validator(validate_processors),
         )
+        .arg(
+            Arg::with_name("v")
+                .short("v")
+                .multiple(true)
+                .help("Sets the level of verbosity"),
+        )
         .get_matches();
 
     let search = matches.value_of("search").unwrap();
+    let verbosity = matches.occurrences_of("v");
     let cpus = match matches.value_of("cpus") {
-        Some(result) => result.parse::<usize>().unwrap(),
+        Some(arg) => arg.parse::<usize>().unwrap(),
         None => num_cpus::get(),
     };
 
-    if let Err(e) = eth_fabulous::run(search, cpus) {
+    if let Err(e) = eth_fabulous::run(search, cpus, verbosity) {
         eprintln!("Application error: {}", e)
     }
 }
