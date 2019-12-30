@@ -121,12 +121,12 @@ pub fn try_generate_wallet(regex: &Regex, trying: Arc<Mutex<bool>>) -> bool {
         }
     }
 
-    *trying.try_lock().unwrap()
+    *trying.lock().unwrap()
 }
 
-pub fn run() -> Result<u32, &'static str> {
+pub fn run(regex: &str) -> Result<u32, &'static str> {
     let cpus = num_cpus::get();
-    let regex = Arc::new(Regex::new("00000").unwrap());
+    let regex = Arc::new(Regex::new(regex).unwrap());
     let trying = Arc::new(Mutex::new(true));
 
     let mut workers = Vec::with_capacity(cpus);
